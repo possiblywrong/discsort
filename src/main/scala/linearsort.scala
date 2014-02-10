@@ -88,7 +88,7 @@ object DiscOrder {
       while( i < input_size ) {
          xs(i) match { case (idx,v) =>
                            if(arr(idx) == null) arr(idx) = ArrayBuffer[A](v)
-                           else arr(idx) :+ v }
+                           else arr(idx) += v }
          i += 1
       }
       var ret = Vector.empty[Vector[A]]
