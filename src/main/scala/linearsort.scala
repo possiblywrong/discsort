@@ -1,5 +1,5 @@
 package discsort
-import scala.collection.mutable.MutableList
+import scala.collection.mutable.ArrayBuffer
 import scalaz._, Scalaz._
 import util.Random._
 import kadai.cmdopts._, CmdOpts._
@@ -83,17 +83,17 @@ object DiscOrder {
 
    def dsortNat[A](z: NatOrd, xs: Vector[(Int,A)]): Vector[Vector[A]] = {
       val asize = z.i+1; val input_size = xs.size
-      val arr = new Array[Vector[A]](asize)
+      val arr = new Array[ArrayBuffer[A]](asize)
       var i = 0
       while( i < input_size ) {
          xs(i) match { case (idx,v) =>
-                           if(arr(idx) == null) arr(idx) = Vector[A](v)
-                           else arr(idx) = arr(idx) :+ v }
+                           if(arr(idx) == null) arr(idx) = ArrayBuffer[A](v)
+                           else arr(idx) :+ v }
          i += 1
       }
       var ret = Vector.empty[Vector[A]]
       i = 0
-      while( i < asize ){ if(arr(i) != null) ret = ret :+ arr(i); i += 1 }
+      while( i < asize ){ if(arr(i) != null) ret = ret :+ arr(i).toVector; i += 1 }
       ret
    }
 
