@@ -8,82 +8,69 @@ import kadai.cmdopts._, CmdOpts._
 // based on the following paper;
 // www.diku.dk/hjemmesider/ansatte/henglein/papers/henglein2011a.pdf
 
-abstract class SOrder[A]
-case class Nat0(i: Int) extends SOrder[Int]
-case class Triv0[A]() extends SOrder[A]
-case class SumL[A,B](t1: SOrder[A], t2: SOrder[B]) extends SOrder[A\/B]
-case class ProdL[A,B](t1: SOrder[A], t2: SOrder[B]) extends SOrder[(A,B)]
-case class Map0[A,B](f: A => B, t2: SOrder[B]) extends SOrder[A]
-case class ListL[A](t: SOrder[A]) extends SOrder[List[A]]
+abstract class DiscOrder[A]
+case class NatOrd(i: Int) extends DiscOrder[Int]
+case class TrivOrd[A]() extends DiscOrder[A]
+case class SumOrd[A,B](t1: DiscOrder[A], t2: DiscOrder[B]) extends DiscOrder[Either[A,B]]
+case class ProdOrd[A,B](t1: DiscOrder[A], t2: DiscOrder[B]) extends DiscOrder[(A,B)]
+case class MapOrd[A,B](f: A => B, t2: DiscOrder[B]) extends DiscOrder[A]
+case class ListOrd[A](t: DiscOrder[A]) extends DiscOrder[Vector[A]]
 
-object SOrder {
-   val ordUnit = Triv0[Unit]()
-   val ordNat8 = Nat0(255)
-   val ordNat16 = Nat0(65535)
-   val ordInt32 = Map0(splitW compose {x:Int => x+(-2147483648)},
-                       ProdL(ordNat16, ordNat16))
+object DiscOrder {
+   val ordUnit = TrivOrd[Unit]()
+   val ordNat8 = NatOrd(255)
+   val ordNat16 = NatOrd(65535)
+   val ordInt32 = MapOrd(splitW compose {x:Int => x+(-2147483648)},
+                       ProdOrd(ordNat16, ordNat16))
    def splitW: Int => (Int,Int) = x => ((x>>16) & 65535,x & 65535)
-   val ordChar8 = Map0({x: Char => x.toInt},ordNat8)
-   val ordString8 = ListL(ordChar8)
+   val ordChar8 = MapOrd({x: Char => x.toInt},ordNat8)
+   val ordString8 = ListOrd(ordChar8)
 
-   def sdisc[A,B](ord: SOrder[A], xs: List[(A,B)]): List[List[B]] =
+   def dsort[A,B](ord: DiscOrder[A], xs: Vector[(A,B)]): Vector[Vector[B]] =
       xs match {
-         case Nil => Nil
-         case List((_,v)) => List(List(v))
+         case Vector() => Vector()
+         case Vector((_,v)) => Vector(Vector(v))
          case _ => ord match {
-            case Triv0() => List(xs map { _._2 })
-            case n: Nat0 => sdiscNat(n,xs) |> { arr =>
-                               val mlist = MutableList[List[B]]()
-                               arr.foreach { a: MutableList[B] => if(a != null) mlist += a.toList }
-                               mlist.toList
-                            }
-            case SumL(orda,ordb) => sdiscSum(orda,ordb,xs)
-            case ProdL(orda,ordb) => sdiscProd(orda,ordb,xs)
-            case Map0(f,ordb) => sdiscMap(f,ordb,xs)
-            case ListL(orda) => sdiscList(orda,xs)
+            case TrivOrd() => Vector(xs map { _._2 })
+            case n: NatOrd => dsortNat(n,xs)
+            case SumOrd(orda,ordb) => dsortSum(orda,ordb,xs)
+            case ProdOrd(orda,ordb) => dsortProd(orda,ordb,xs)
+            case MapOrd(f,ordb) => dsortMap(f,ordb,xs)
+            case ListOrd(orda) => dsortList(orda,xs)
          }
       }
 
-   def stripPartition[A](l: List[A]): (Unit\/(A,List[A]))  =
-      l.headOption.cata( { x: A => (x,l.tail).right[Unit] },
-                         { ().left[(A,List[A])] } )
+   def stripPartition[A](l: Vector[A]): (Either[Unit,(A,Vector[A])])  =
+      l.headOption.cata( { x: A => Right((x,l.tail)) }, { Left(()) } )
 
-   def sdiscList[A,B](orda: SOrder[A], xs: List[(List[A],B)]): List[List[B]] = {
-      sdisc(Map0(stripPartition[A], SumL(ordUnit,ProdL(orda,ListL(orda)))), xs)
-   }
+   def dsortList[A,B](orda: DiscOrder[A], xs: Vector[(Vector[A],B)]): Vector[Vector[B]] =
+      dsort(MapOrd(stripPartition[A], SumOrd(ordUnit,ProdOrd(orda,ListOrd(orda)))), xs)
 
-   def sdiscMap[A,B,C](f: A => B, ordb: SOrder[B], xs: List[(A,C)]): List[List[C]] = {
-      val xs_reassoc = xs map { case (a,c) => (f(a),c) }
-      sdisc(ordb,xs_reassoc)
-   }
+   def dsortMap[A,B,C](f: A => B, ordb: DiscOrder[B], xs: Vector[(A,C)]): Vector[Vector[C]] =
+      dsort(ordb,xs map { case (a,c) => (f(a),c) })
 
-   def flipTuple[A,B,C](t: ((A,B),C)): (A,(B,C))  = t match { case ((a,b),c) => (a,(b,c)) }
+   def dsortProd[A,B,C](orda: DiscOrder[A], ordb: DiscOrder[B], xs: Vector[((A,B),C)]): Vector[Vector[C]] =
+      dsort(orda,xs map { case ((a,b),c) => (a,(b,c)) }) flatMap { dsort(ordb,_) }
 
-   def sdiscProd[A,B,C](orda: SOrder[A], ordb: SOrder[B], xs: List[((A,B),C)]): List[List[C]] = {
-      val xs_reassoc = xs map flipTuple
-      for { ys <- sdisc(orda,xs_reassoc); vs <- sdisc(ordb,ys) } yield vs
-   }
-   def sdiscSum[A,B,C](orda: SOrder[A], ordb: SOrder[B], xs: List[(A\/B,C)]): List[List[C]] = {
-      val lefts  = MutableList[(A,C)]()
-      val rights = MutableList[(B,C)]()
-      xs.foreach { x =>
-         x._1.bimap( { l => lefts  += ((l,x._2)) }
-                    ,{ r => rights += ((r,x._2)) } )
+   def dsortSum[A,B,C](orda: DiscOrder[A], ordb: DiscOrder[B], xs: Vector[(Either[A,B],C)]): Vector[Vector[C]] = {
+      val (lefts,rights) = xs.foldLeft((Vector[(A,C)](),Vector[(B,C)]())) {
+         case ((ls,rs),(Left(x),v)) => (ls :+ (x,v),rs)
+         case ((ls,rs),(Right(x),v)) => (ls,rs :+ (x,v))
       }
-      sdisc(orda,lefts.toList) ++ sdisc(ordb,rights.toList)
+      dsort(orda,lefts) ++ dsort(ordb,rights)
    }
 
-   val v1 = List[(Int\/Int,Int)]((4.left,4),(3.left,3),(5.right,5),(6.right,6),(1.right,1))
-   lazy val resA: List[Int] = sdisc(SumL(Nat0(255),Nat0(255)),v1).flatten
+   val v1 = Vector[(Either[Int,Int],Int)]((Left(4),4),(Left(3),3),(Right(5),5),(Right(6),6),(Right(1),1))
+   lazy val resA: Vector[Int] = dsort(SumOrd(NatOrd(255),NatOrd(255)),v1).flatten
 
-   val v2 = List[((Int,Int),Int)](((4,5),4),((3,6),3),((3,2),5),((1,10),6),((9,3),1))
-   lazy val resB: List[Int] = sdisc(ProdL(Nat0(255),Nat0(255)),v2).flatten
+   val v2 = Vector[((Int,Int),Int)](((4,5),4),((3,6),3),((3,2),5),((1,10),6),((9,3),1))
+   lazy val resB: Vector[Int] = dsort(ProdOrd(NatOrd(255),NatOrd(255)),v2).flatten
 
-   val v3 = List[(Char,Int)](('y',5),('h',1),('c',3),('l',1),('t',9))
-   lazy val resC: List[Int] = sdisc(ordChar8,v3).flatten
+   val v3 = Vector[(Char,Int)](('y',5),('h',1),('c',3),('l',1),('t',9))
+   lazy val resC: Vector[Int] = dsort(ordChar8,v3).flatten
 
-   val v4 = List[(String,String)](("bb","bb"),("ab","ab"),("aa","aa"),("ba","ba"))
-   lazy val resD: List[String] = sdisc(ordString8,v4.map { x => (x._1.toList,x._2) }).flatten
+   val v4 = Vector[(String,String)](("bb","bb"),("ab","ab"),("aa","aa"),("ba","ba"))
+   lazy val resD: Vector[String] = dsort(ordString8,v4.map { x => (x._1.toVector,x._2) }).flatten
 
    val data10 = List.fill(10)(nextInt)
    val data10t = data10.zip(data10)
@@ -94,14 +81,20 @@ object SOrder {
    val data1000000 = List.fill(1000000)(nextInt)
    val data1000000t = data1000000.zip(data1000000)
 
-   def sdiscNat[A](z: Nat0, xs: List[(Int,A)]): Array[MutableList[A]] = {
-      val arr = new Array[MutableList[A]](z.i+1)
-      xs.foreach { arg: (Int,A) =>
-         val idx = arg._1
-         if(arr(idx) == null) arr(idx) = MutableList[A](arg._2)
-         else arr(idx) += arg._2
+   def dsortNat[A](z: NatOrd, xs: Vector[(Int,A)]): Vector[Vector[A]] = {
+      val asize = z.i+1; val input_size = xs.size
+      val arr = new Array[Vector[A]](asize)
+      var i = 0
+      while( i < input_size ) {
+         xs(i) match { case (idx,v) =>
+                           if(arr(idx) == null) arr(idx) = Vector[A](v)
+                           else arr(idx) = arr(idx) :+ v }
+         i += 1
       }
-      arr
+      var ret = Vector.empty[Vector[A]]
+      i = 0
+      while( i < asize ){ if(arr(i) != null) ret = ret :+ arr(i); i += 1 }
+      ret
    }
 
    def time[A](f: => A) = {
@@ -113,7 +106,7 @@ object SOrder {
 }
 
 object Main extends App {
-   import SOrder._
+   import DiscOrder._
 
    object CArgs extends CmdOpts(args) {
       lazy val cmpsort = opt("--cmp",TRUE) | false
@@ -124,16 +117,16 @@ object Main extends App {
    }
 
    if(CArgs.strings){
-      val words: List[String] = scala.io.Source.fromFile(CArgs.file)
+      val words: Vector[String] = scala.io.Source.fromFile(CArgs.file)
                     .getLines
-                    .flatMap(_.split("\\W+")).toList
-      val wordst: List[(List[Char],String)] = words.zip(words).map { x => (x._1.toList,x._2) }
+                    .flatMap(_.split("\\W+")).toVector
+      val wordst: Vector[(Vector[Char],String)] = words.zip(words).map { x => (x._1.toVector,x._2) }
       if(CArgs.cmpsort) while(true) { time{ words.sorted } }
-      else              while(true) { time{ sdisc(ordString8,wordst) } }
+      else              while(true) { time{ dsort(ordString8,wordst) } }
    } else {
-      val data = List.fill(CArgs.size)(nextInt)
+      val data = Vector.fill(CArgs.size)(nextInt)
       val datat = data.zip(data)
       if(CArgs.cmpsort) while(true) { time{ data.sorted } }
-      else              while(true) { time{ sdisc(ordInt32,datat) } }
+      else              while(true) { time{ dsort(ordInt32,datat) } }
    }
 }
