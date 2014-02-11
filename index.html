@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=1024" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>Quicker&#8209;sort?</title>
+    <title>Quicker&#8209;sort</title>
     <meta name="description" content="impress.js is a presentation tool based on the power of CSS3 transforms and transitions in modern browsers and inspired by the idea behind prezi.com." />
     <meta name="author" content="Bartek Szopka" />
 
@@ -54,8 +54,12 @@
         From presentation and transitions point of view it means, that it will have to be scaled
         down (4 times) to make it back to it's correct size.
     -->
-    <div id="title" class="step" data-x="0" data-y="0" data-scale="4">
+    <div id="title" class="step hidden" data-x="0" data-y="0" data-scale="4">
         <h1>Quicker<br/>sort?</h1>
+        <span class="footnote"></span>
+    </div>
+    <div id="title" class="step hidden" data-x="0" data-y="0" data-scale="4">
+        <h1>Quicker<br/>sort!</h1>
         <span class="footnote"></span>
     </div>
 
@@ -85,7 +89,7 @@
         <pre class="sh_scala">def cmp(a: T, b: T): Boolean</pre>
     </div>
     <div class="step" data-x="0" data-y="19000" data-scale="4">
-      <pre class="sh_scala">def sort[T](xs: List[T])(implicit cmp: (T,T) => Boolean): List[T]</pre>
+      <pre class="sh_scala">def sort[T](xs: List[T], cmp: (T,T) => Boolean): List[T]</pre>
     </div>
     <div class="step" data-x="0" data-y="22000" data-scale="4">
       <p><img src="images/hh-tabulator.gif"/></p>
@@ -302,7 +306,7 @@
       ...<br/>
       [(Right((b,[a])),"ba"),<br/>(Right((b,[b,a])),"bba"),(Right((c,[])),"c")</br>
       [((b,[a]),"ba"),((b,[b,a]),"bba"),((c,[]),"c")]<br/>
-      [(b,([a],"ba"),(b,([b,a],"bba")),(c,([],"c"))]<br/><br/>
+      [(b,([a],"ba")),(b,([b,a],"bba")),(c,([],"c"))]<br/><br/>
     </div>
     <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
       ...<br/>
@@ -334,21 +338,23 @@
       ...<br/>
       ["ba", "bba", "c"]</br>
     </div>
-    <div class="step" data-x="115000" data-y="37000" data-scale="4">
+    <div class="step" data-x="120000" data-y="37000" data-scale="4">
       So how fast is it?
     </div>
-
-
-
-
-
-
-
-    <div class="step hidden" data-x="36000" data-y="-27000" data-z="29000" data-rotate-y="90" data-rotate-x="180" data-scale="2">
-        <p>Done!</p>
-        <p>Easy questions only!</p>
+    <div class="step hidden" data-x="120000" data-y="37000" data-scale="4">
+      <p><img src="images/disc_sort.png"/></p>
     </div>
-    <div class="step hidden" data-x="36000" data-y="-27000" data-z="33000" data-rotate-y="90" data-rotate-x="180" data-scale="2">
+    <div class="step hidden" data-x="125000" data-y="37000" data-scale="4">
+        <p>Now you can relax!</p>
+    </div>
+    <div class="step hidden" data-x="125000" data-y="37000" data-scale="4">
+        <p>References</p>
+        <p>Fritz Henglein: <a href="http://www.diku.dk/~henglein/">DIKU CS Dept</a></p>
+        <p>Ralf Hinze: <a href="http://www.cs.ox.ac.uk/ralf.hinze/">Oxford CS Dept</a></p>
+        <p>Papers: <a href="www.diku.dk/hjemmesider/ansatte/henglein/papers/henglein2011a.pdf">1</a>, <a href="www.cs.ox.ac.uk/ralf.hinze/WG2.8/31/slides/aplas2013.pdf">2</a></p>
+        
+    </div>
+    <div class="step hidden" data-x="130000" data-y="37000" data-scale="4">
         <p>Credits</p>
         <p class="code">impress.js =&gt; <a href="https://github.com/bartaz/impress.js">HERE</a></p>
         <p class="code">Type =&gt; <a href="http://www.fontspring.com/fonts/paragraph/tertre">Tertre</a>/<a href="http://www.fontspring.com/fonts/paragraph/tertre#webfont_license">License</a></p>
