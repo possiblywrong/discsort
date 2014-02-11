@@ -267,6 +267,77 @@
                                   dsort(new_order, xs)
          }</pre>
     </div>
+    <div class="step hidden" data-x="100000" data-y="37000" data-scale="4">
+       MapOrd(toHeadTailTuple,<br/>SumOrd(TrivOrd(),<br/>ProdOrd(ord, ListOrd(ord))))
+    </div>
+    <div class="step hidden" data-x="105000" data-y="37000" data-scale="4">
+      <pre class="sh_scala">def toHeadTailTuple[A,B](elt: List[B]): (A\/B,List[B])</pre>
+    </div>
+    <div class="step hidden" data-x="110000" data-y="37000" data-scale="4">
+      <pre class="sh_scala">def toHeadTailTuple[A,B](elt: List[B]): A\/(B,List[B]) =
+         elt.headOption match {
+            case None => ().left
+            case Some(h) => (h,elt.tail).right
+         }</pre>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ["ba","bba","c"]<br/><br/><br/><br/><br/><br/><br/>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ["ba","bba","c"]<br/>
+      [("ba","ba"),("bba","bba"),("c","c")]<br/><br/><br/><br/><br/>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ["ba","bba","c"]<br/>
+      [("ba","ba"),("bba","bba"),("c","c")]<br/>
+      [([b,a],"ba"),([b,b,a],"bba"),([c],"c")]<br/><br/><br/></br>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ["ba","bba","c"]</br>
+      [("ba","ba"),("bba","bba"),("c","c")]<br/>
+      [([b,a],"ba"),([b,b,a],"bba"),([c],"c")]<br/>
+      [(Right((b,[a])),"ba"),<br/>(Right((b,[b,a])),"bba"),(Right((c,[])),"c")]<br/><br/>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ...<br/>
+      [(Right((b,[a])),"ba"),<br/>(Right((b,[b,a])),"bba"),(Right((c,[])),"c")</br>
+      [((b,[a]),"ba"),((b,[b,a]),"bba"),((c,[]),"c")]<br/>
+      [(b,([a],"ba"),(b,([b,a],"bba")),(c,([],"c"))]<br/><br/>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ...<br/>
+      [((b,[a]),"ba"),((b,[b,a]),"bba"),((c,[]),"c")]<br/>
+      [(b,([a],"ba"),(b,([b,a],"bba")),(c,([],"c"))]<br/>
+      [(2,([a],"ba"),(2,([b,a],"bba")),(3,([],"c"))]<br/>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ...<br/>
+      [(2,([a],"ba"),(2,([b,a],"bba")),(3,([],"c"))]<br/>
+      [[([a],"ba"),([b,a],"bba")],  [([],"c")]]<br/>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ...<br/>
+      [[([a],"ba"),([b,a],"bba")],  [([],"c")]]<br/>
+      [((a,[]),"ba"),((b,[a]),"bba"))] ++ [["c"]]</br>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ...<br/>
+      [((a,[]),"ba"),((b,[a]),"bba"))] ++ [["c"]]</br>
+      [[([],"ba")],[([a],"bba")]] ++ [["c"]]</br>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ...<br/>
+      [[([],"ba")],[([a],"bba")]] ++ [["c"]]</br>
+      [["ba"]] ++ [["bba"]] ++ [["c"]]</br>
+    </div>
+    <div class="step hidden" data-x="115000" data-y="37000" data-scale="4">
+      ...<br/>
+      ["ba", "bba", "c"]</br>
+    </div>
+    <div class="step" data-x="115000" data-y="37000" data-scale="4">
+      So how fast is it?
+    </div>
+
 
 
 
@@ -275,7 +346,7 @@
 
     <div class="step hidden" data-x="36000" data-y="-27000" data-z="29000" data-rotate-y="90" data-rotate-x="180" data-scale="2">
         <p>Done!</p>
-        <p><img src="images/como_loves_you.jpg"/></p>
+        <p>Easy questions only!</p>
     </div>
     <div class="step hidden" data-x="36000" data-y="-27000" data-z="33000" data-rotate-y="90" data-rotate-x="180" data-scale="2">
         <p>Credits</p>
