@@ -95,7 +95,7 @@ object DiscOrder {
    def time[A](f: => A) = {
       val s = System.nanoTime
       val ret = f
-      println("time: "+(System.nanoTime-s)/1e6+"ms")
+      println(""+(System.nanoTime-s)/1e6)
       ret
    }
 }
@@ -108,6 +108,7 @@ object Main extends App {
       lazy val strings = opt("--string",TRUE) | false
       lazy val file = opt("--file",((x: String) => x)) | "words.txt"
       lazy val size = opt("--size",((x: String) => x.toInt)) | 1000
+      lazy val iterations = opt("--iterations",((x: String) => x.toInt)) | 1000
       override def version = opt("--version", () => "0.1")
    }
 
@@ -117,12 +118,12 @@ object Main extends App {
                     .flatMap(_.split("\\W+")).toStream
       val words = src.zip(src)
       val wordst: Stream[(Stream[Char],String)] = words.map { x => (x._1.toStream,x._2) }
-      if(CArgs.cmpsort) while(true) { time{ words.sorted } }
-      else              while(true) { time{ dsort(ordString8,wordst) } }
+      if(CArgs.cmpsort) for(i <- 0 until CArgs.iterations) { time{ words.sorted } }
+      else              for(i <- 0 until CArgs.iterations) { time{ dsort(ordString8,wordst) } }
    } else {
       val data = Stream.fill(CArgs.size)(nextInt)
       val datat = data.zip(data)
-      if(CArgs.cmpsort) while(true) { time{ datat.sorted } }
-      else              while(true) { time{ dsort(ordInt32,datat) } }
+      if(CArgs.cmpsort) for(i <- 0 until CArgs.iterations) { time{ datat.sorted } }
+      else              for(i <- 0 until CArgs.iterations) { time{ dsort(ordInt32,datat) } }
    }
 }
